@@ -24,7 +24,7 @@ export function DesktopSidebar({ collapsed }) {
         )}
       >
         <Link to="/dashboard" aria-label="Ir al inicio">
-          <Logo compact={collapsed} />
+          <Logo variant={collapsed ? 'mark' : 'lockup'} />
         </Link>
       </div>
       <div className="custom-scrollbar flex-1 overflow-y-auto px-4 pb-8">

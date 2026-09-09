@@ -34,10 +34,8 @@ export function AuthLayout() {
           }}
         />
         <div className="relative z-1 max-w-sm px-6 text-center">
-          <div className="mb-6 flex justify-center">
-            <span className="flex size-16 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold text-white">
-              S
-            </span>
+          <div className="mb-8 flex justify-center">
+            <Logo variant="onDark" className="h-36" />
           </div>
           <h2 className="text-title-sm font-bold text-white">
             CRM Clínica Satori
