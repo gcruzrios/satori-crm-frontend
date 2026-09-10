@@ -1,5 +1,6 @@
+import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Pencil, Trash2, Send, Check, X, FileDown, ReceiptText } from 'lucide-react';
+import { Pencil, Trash2, Send, Check, X, FileDown, Eye, ReceiptText } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { QUOTE_STATUS_OPTIONS } from '@/lib/constants';
@@ -8,9 +9,13 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { LoadingState, ErrorState } from '@/components/ui/states';
 import { useConfirm } from '@/components/ui/confirm';
+import { toast } from '@/components/ui/toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { SectionCard, DescriptionList, DetailGrid } from '@/components/detail/DetailParts';
 import { DocumentView } from './DocumentView';
-import { quotesApi } from './api';
+import { QuoteDocument } from './QuoteDocument';
+import { useCompany } from '@/features/companies/hooks';
+import { useContact } from '@/features/contacts/hooks';
 import {
   useQuote,
   useDeleteQuote,
@@ -35,11 +40,34 @@ export function QuoteDetailPage() {
     onSuccess: (inv) => inv?.id && navigate(`/invoices/${inv.id}`),
   });
 
+  const quote = quoteQuery.data;
+  const companyQuery = useCompany(quote?.company_id, { enabled: !!quote?.company_id });
+  const contactQuery = useContact(quote?.contact_id, { enabled: !!quote?.contact_id });
+  const pdfReady =
+    !!quote &&
+    (!quote.company_id || !companyQuery.isLoading) &&
+    (!quote.contact_id || !contactQuery.isLoading);
+
+  const pdfRef = useRef(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  async function handleGeneratePdf() {
+    setGenerating(true);
+    try {
+      const { downloadNodeAsPdf } = await import('./pdf');
+      await downloadNodeAsPdf(pdfRef.current, `${quote.number || 'cotizacion'}.pdf`);
+    } catch {
+      toast.error('No se pudo generar el PDF');
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   if (quoteQuery.isLoading) return <LoadingState />;
   if (quoteQuery.isError)
     return <ErrorState error={quoteQuery.error} onRetry={quoteQuery.refetch} />;
 
-  const quote = quoteQuery.data;
   const title = quote.number || `Cotización ${id.slice(0, 8)}`;
 
   return (
@@ -50,11 +78,11 @@ export function QuoteDetailPage() {
         description={<StatusBadge value={quote.status} options={QUOTE_STATUS_OPTIONS} />}
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => window.open(quotesApi.pdfUrl(id), '_blank', 'noopener')}
-            >
-              <FileDown className="size-4" /> PDF
+            <Button variant="secondary" disabled={!pdfReady} onClick={() => setPreviewOpen(true)}>
+              <Eye className="size-4" /> Vista previa
+            </Button>
+            <Button variant="secondary" disabled={!pdfReady} loading={generating} onClick={handleGeneratePdf}>
+              <FileDown className="size-4" /> Generar PDF
             </Button>
             {can('quotes:write') && quote.status === 'draft' && (
               <Button variant="secondary" onClick={() => navigate(`/quotes/${id}/edit`)}>
@@ -198,6 +226,32 @@ export function QuoteDetailPage() {
           )}
         </div>
       </DetailGrid>
+
+      {/* Off-screen but laid out, so html2canvas can capture it for "Generar PDF". */}
+      <div style={{ position: 'fixed', top: 0, left: -10000, pointerEvents: 'none' }} aria-hidden>
+        <QuoteDocument ref={pdfRef} quote={quote} company={companyQuery.data} contact={contactQuery.data} />
+      </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent size="xl">
+          <DialogHeader>
+            <DialogTitle>Vista previa — {title}</DialogTitle>
+          </DialogHeader>
+          <DialogBody className="bg-gray-50 dark:bg-gray-900">
+            <div className="overflow-auto rounded-lg border border-gray-200 shadow-sm dark:border-gray-800">
+              <QuoteDocument quote={quote} company={companyQuery.data} contact={contactQuery.data} />
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setPreviewOpen(false)}>
+              Cerrar
+            </Button>
+            <Button loading={generating} onClick={handleGeneratePdf}>
+              <FileDown className="size-4" /> Generar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

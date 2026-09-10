@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Users as UsersIcon, MoreHorizontal, Pencil, UserX } from 'lucide-react';
+import { Plus, Users as UsersIcon, MoreHorizontal, Pencil, UserX, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { fullName, pruneEmpty } from '@/lib/utils';
 import { USER_ROLE_OPTIONS } from '@/lib/constants';
@@ -35,7 +35,12 @@ import {
   useCreateUser,
   useUpdateUser,
   useDeactivateUser,
+  useDeleteUser,
 } from './hooks';
+
+// El rol "admin" se administra fuera de esta pantalla: no se puede asignar
+// desde el formulario ni editar/borrar usuarios administradores aquí.
+const ASSIGNABLE_ROLE_OPTIONS = USER_ROLE_OPTIONS.filter((o) => o.value !== 'admin');
 
 const createSchema = z.object({
   first_name: z.string().trim().min(1, 'Requerido'),
@@ -138,7 +143,7 @@ function UserModal({ open, onOpenChange, user, onSaved }) {
                 error={errors.password?.message}
               />
             )}
-            <SelectField name="role" label="Rol" control={control} options={USER_ROLE_OPTIONS} error={errors.role?.message} />
+            <SelectField name="role" label="Rol" control={control} options={ASSIGNABLE_ROLE_OPTIONS} error={errors.role?.message} />
             {isEdit && (
               <SwitchField name="is_active" control={control} label="Usuario activo" />
             )}
@@ -163,6 +168,7 @@ export function UsersPage() {
   const [modal, setModal] = useState(null); // 'new' | { user } | null
   const query = useUsers({ page: 1, pageSize: 100 });
   const deactivate = useDeactivateUser();
+  const deleteUser = useDeleteUser();
 
   const columns = [
     {
@@ -199,7 +205,8 @@ export function UsersPage() {
       actions: true,
       align: 'right',
       cell: (u) =>
-        can('users:write') && (
+        can('users:write') &&
+        u.role !== 'admin' && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5" aria-label="Acciones">
@@ -212,7 +219,6 @@ export function UsersPage() {
               </DropdownMenuItem>
               {u.is_active !== false && (
                 <DropdownMenuItem
-                  tone="danger"
                   onSelect={async () => {
                     const ok = await confirm({
                       title: 'Desactivar usuario',
@@ -226,6 +232,20 @@ export function UsersPage() {
                   <UserX className="size-4" /> Desactivar
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem
+                tone="danger"
+                onSelect={async () => {
+                  const ok = await confirm({
+                    title: 'Borrar usuario',
+                    description: `Esta acción eliminará a ${fullName(u)} de forma permanente.`,
+                    confirmText: 'Borrar',
+                    tone: 'danger',
+                  });
+                  if (ok) deleteUser.mutate(u.id);
+                }}
+              >
+                <Trash2 className="size-4" /> Borrar
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ),

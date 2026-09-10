@@ -182,6 +182,16 @@ export const USER_ROLE_OPTIONS = [
   { value: 'accounting', label: 'Contabilidad', tone: 'gray' },
 ];
 
+/** Datos fiscales fijos del emisor, para el encabezado de cotizaciones/facturas en PDF. */
+export const SATORI_ISSUER = {
+  name: 'Clínica Satori Costa Rica',
+  tagline: 'Psychology & Wellbeing',
+  taxId: 'Cédula Jurídica: 3-101-789456',
+  location: 'San José, Costa Rica',
+  email: 'contacto@satori.cr',
+  phone: '+(506) 2200-0000',
+};
+
 export const LEAD_TYPE = index(LEAD_TYPE_OPTIONS);
 export const LEAD_SOURCE = index(LEAD_SOURCE_OPTIONS);
 export const LEAD_STATUS = index(LEAD_STATUS_OPTIONS);

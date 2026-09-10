@@ -13,6 +13,7 @@ export const {
   useItem: useUser,
   useCreate: useCreateUser,
   useUpdate: useUpdateUser,
+  useRemove: useDeleteUser,
 } = hooks;
 
 /** Options for "assigned_to" / "responsable" selects across the app. */
