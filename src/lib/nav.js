@@ -9,9 +9,6 @@ import {
   FileText,
   ReceiptText,
   Package,
-  Inbox,
-  Mail,
-  MessageCircle,
   Users,
 } from 'lucide-react';
 
@@ -46,14 +43,6 @@ export const NAV_GROUPS = [
     title: 'Catálogo',
     items: [
       { label: 'Servicios', to: '/services', icon: Package, capability: 'services:read' },
-    ],
-  },
-  {
-    title: 'Comunicaciones',
-    items: [
-      { label: 'Bandeja', to: '/communications', icon: Inbox, capability: 'communications:read' },
-      { label: 'Email', to: '/communications/email', icon: Mail, capability: 'communications:read' },
-      { label: 'WhatsApp', to: '/communications/whatsapp', icon: MessageCircle, capability: 'communications:read' },
     ],
   },
   {
