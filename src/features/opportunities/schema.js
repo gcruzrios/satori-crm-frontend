@@ -3,7 +3,8 @@ import { DEFAULT_CURRENCY } from '@/lib/currency';
 
 const opt = z.string().trim().optional().or(z.literal(''));
 
-export const opportunitySchema = z.object({
+export const opportunitySchema = z
+  .object({
   name: z.string().trim().min(1, 'El nombre es obligatorio'),
   pipeline_id: z.string().min(1, 'Selecciona un pipeline'),
   stage_id: z.string().min(1, 'Selecciona una etapa'),
@@ -17,7 +18,14 @@ export const opportunitySchema = z.object({
   status: z.string().default('open'),
   assigned_to: opt,
   notes: opt,
-});
+  })
+  .superRefine((v, ctx) => {
+    if (!v.contact_id && !v.company_id) {
+      const message = 'Indica un contacto o una empresa';
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['contact_id'], message });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['company_id'], message });
+    }
+  });
 
 export const opportunityDefaults = {
   name: '',

@@ -9,7 +9,7 @@ import { inputClasses } from './input';
  * Value is an ISO date string ('yyyy-MM-dd') or datetime-local string.
  */
 export const DatePicker = forwardRef(function DatePicker(
-  { className, invalid, withTime = false, ...props },
+  { className, invalid, withTime = false, onClick, ...props },
   ref,
 ) {
   return (
@@ -18,6 +18,11 @@ export const DatePicker = forwardRef(function DatePicker(
         ref={ref}
         type={withTime ? 'datetime-local' : 'date'}
         className={cn(inputClasses({ invalid }), 'pr-11 [color-scheme:light] dark:[color-scheme:dark]', className)}
+        onClick={(e) => {
+          // Open the calendar on any click in the field, not just the icon.
+          try { e.currentTarget.showPicker?.(); } catch { /* already open */ }
+          onClick?.(e);
+        }}
         {...props}
       />
       <CalendarDays className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-gray-400" />

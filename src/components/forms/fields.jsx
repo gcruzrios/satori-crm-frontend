@@ -97,6 +97,8 @@ export function DateField({
   required,
   hint,
   withTime,
+  min,
+  max,
   className,
 }) {
   return (
@@ -109,6 +111,8 @@ export function DateField({
             <DatePicker
               id={id}
               withTime={withTime}
+              min={min}
+              max={max}
               value={field.value ?? ''}
               onChange={(e) => field.onChange(e.target.value)}
               invalid={!!error}

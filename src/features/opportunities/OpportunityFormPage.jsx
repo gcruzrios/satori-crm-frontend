@@ -27,6 +27,8 @@ import {
   opportunityToPayload,
 } from './schema';
 
+const YEAR = new Date().getFullYear();
+
 export function OpportunityFormPage() {
   const { id } = useParams();
   const isEdit = !!id;
@@ -118,7 +120,7 @@ export function OpportunityFormPage() {
             <NumberField name="expected_value" label="Valor estimado" register={register} min={0} step="0.01" error={errors.expected_value?.message} />
             <SelectField name="currency" label="Moneda" control={control} options={CURRENCIES.map((c) => ({ value: c, label: c }))} error={errors.currency?.message} />
             <NumberField name="probability" label="Probabilidad (%)" register={register} min={0} max={100} error={errors.probability?.message} />
-            <DateField name="expected_close_date" label="Fecha estimada de cierre" control={control} error={errors.expected_close_date?.message} />
+            <DateField name="expected_close_date" label="Fecha estimada de cierre" control={control} min={`${YEAR}-01-01`} max={`${YEAR}-12-31`} hint={`Elige una fecha de ${YEAR}`} error={errors.expected_close_date?.message} />
           </FormGrid>
         </FormSection>
 
